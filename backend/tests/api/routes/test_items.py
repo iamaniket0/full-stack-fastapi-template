@@ -5,6 +5,7 @@ from sqlmodel import Session
 
 from app.core.config import settings
 from tests.utils.item import create_random_item
+from tests.utils.user import authentication_token_from_email, create_random_user
 
 
 def test_create_item(
@@ -162,3 +163,42 @@ def test_delete_item_not_enough_permissions(
     assert response.status_code == 403
     content = response.json()
     assert content["detail"] == "Not enough permissions"
+
+
+def test_read_items_count(
+    client: TestClient, superuser_token_headers: dict[str, str], db: Session
+) -> None:
+    # Create some items first
+    create_random_item(db)
+    create_random_item(db)
+    create_random_item(db)
+    
+    response = client.get(
+        f"{settings.API_V1_STR}/items/count",
+        headers=superuser_token_headers,
+    )
+    assert response.status_code == 200
+    count = response.json()
+    assert isinstance(count, int)
+    assert count >= 3
+
+
+def test_read_items_count_zero(
+    client: TestClient, superuser_token_headers: dict[str, str], db: Session
+) -> None:
+    # Clear all items first by creating a new user's items and then testing with superuser
+    # Since superuser can see all items, we need to ensure no items exist
+    # This test assumes the database is clean or we test with a normal user
+    user = create_random_user(db)
+    user_token_headers = authentication_token_from_email(
+        client=client, email=user.email, db=db
+    )
+    
+    response = client.get(
+        f"{settings.API_V1_STR}/items/count",
+        headers=user_token_headers,
+    )
+    assert response.status_code == 200
+    count = response.json()
+    assert isinstance(count, int)
+    assert count == 0
