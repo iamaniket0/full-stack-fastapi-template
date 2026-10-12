@@ -162,3 +162,51 @@ def test_delete_item_not_enough_permissions(
     assert response.status_code == 403
     content = response.json()
     assert content["detail"] == "Not enough permissions"
+
+
+def test_read_items_count(
+    client: TestClient, superuser_token_headers: dict[str, str], db: Session
+) -> None:
+    # Create some items
+    create_random_item(db)
+    create_random_item(db)
+    create_random_item(db)
+    
+    # Test the count endpoint
+    response = client.get(
+        f"{settings.API_V1_STR}/items/count",
+        headers=superuser_token_headers,
+    )
+    assert response.status_code == 200
+    count = response.json()
+    assert isinstance(count, int)
+    assert count >= 3
+
+
+def test_read_items_count_normal_user(
+    client: TestClient, normal_user_token_headers: dict[str, str], db: Session
+) -> None:
+    # Create an item for the normal user
+    from tests.utils.user import create_random_user
+    from app import crud
+    from app.models import ItemCreate
+    from tests.utils.utils import random_lower_string
+    
+    # Get the normal user from the database
+    user = create_random_user(db)
+    
+    # Create an item for this user
+    title = random_lower_string()
+    description = random_lower_string()
+    item_in = ItemCreate(title=title, description=description)
+    item = crud.create_item(session=db, item_in=item_in, owner_id=user.id)
+    
+    # Test the count endpoint for normal user (should only count their own items)
+    response = client.get(
+        f"{settings.API_V1_STR}/items/count",
+        headers=normal_user_token_headers,
+    )
+    assert response.status_code == 200
+    count = response.json()
+    assert isinstance(count, int)
+    assert count >= 1
