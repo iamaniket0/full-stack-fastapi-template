@@ -57,3 +57,29 @@ test("Server Time shows an error when the server time is invalid", async ({
   await expect(page.getByText("Could not load the server time.")).toBeVisible()
   await expect(page.getByTestId("server-time")).not.toBeVisible()
 })
+
+test("Server Time matches the real server clock and keeps ticking", async ({
+  page,
+  request,
+}) => {
+  const readUtc = async () => {
+    const text = await page.getByTestId("server-time").innerText()
+    const match = text.match(/UTC: (\S+)/)
+    expect(match).not.toBeNull()
+    return new Date(match![1]).getTime()
+  }
+
+  await page.goto("/server-time")
+  await expect(page.getByTestId("server-time")).toBeVisible()
+
+  const apiUrl = process.env.VITE_API_URL ?? "http://localhost:8000"
+  const response = await request.get(`${apiUrl}/api/v1/utils/server-time/`)
+  expect(response.ok()).toBeTruthy()
+  const { server_time } = await response.json()
+  const apiTime = new Date(server_time).getTime()
+
+  const shown = await readUtc()
+  expect(Math.abs(shown - apiTime)).toBeLessThan(5_000)
+
+  await expect.poll(readUtc, { timeout: 5_000 }).toBeGreaterThan(shown)
+})
