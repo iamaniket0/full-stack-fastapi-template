@@ -50,6 +50,54 @@ test("Log in with valid email and password ", async ({ page }) => {
   ).toBeVisible()
 })
 
+test("Remember me checkbox is visible and checked by default", async ({
+  page,
+}) => {
+  await page.goto("/login")
+
+  const checkbox = page.getByTestId("remember-me-checkbox")
+  await expect(checkbox).toBeVisible()
+  await expect(checkbox).toBeChecked()
+})
+
+test("Log in with remember me stores token persistently", async ({ page }) => {
+  await page.goto("/login")
+
+  await fillForm(page, firstSuperuser, firstSuperuserPassword)
+  await page.getByRole("button", { name: "Log In" }).click()
+  await page.waitForURL("/")
+
+  const tokens = await page.evaluate(() => ({
+    local: localStorage.getItem("access_token"),
+    session: sessionStorage.getItem("access_token"),
+  }))
+  expect(tokens.local).not.toBeNull()
+  expect(tokens.session).toBeNull()
+})
+
+test("Log in without remember me stores token for the session only", async ({
+  page,
+}) => {
+  await page.goto("/login")
+
+  await fillForm(page, firstSuperuser, firstSuperuserPassword)
+  await page.getByTestId("remember-me-checkbox").click()
+  await expect(page.getByTestId("remember-me-checkbox")).not.toBeChecked()
+  await page.getByRole("button", { name: "Log In" }).click()
+  await page.waitForURL("/")
+
+  await expect(
+    page.getByText("Welcome back, nice to see you again!"),
+  ).toBeVisible()
+
+  const tokens = await page.evaluate(() => ({
+    local: localStorage.getItem("access_token"),
+    session: sessionStorage.getItem("access_token"),
+  }))
+  expect(tokens.local).toBeNull()
+  expect(tokens.session).not.toBeNull()
+})
+
 test("Log in with invalid email", async ({ page }) => {
   await page.goto("/login")
 

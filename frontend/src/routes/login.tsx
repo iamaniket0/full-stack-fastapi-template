@@ -9,6 +9,7 @@ import { z } from "zod"
 
 import type { Body_login_login_access_token as AccessToken } from "@/client"
 import { AuthLayout } from "@/components/Common/AuthLayout"
+import { Checkbox } from "@/components/ui/checkbox"
 import {
   Form,
   FormControl,
@@ -28,7 +29,8 @@ const formSchema = z.object({
     .string()
     .min(1, { message: "Password is required" })
     .min(8, { message: "Password must be at least 8 characters" }),
-}) satisfies z.ZodType<AccessToken>
+  remember: z.boolean(),
+}) satisfies z.ZodType<AccessToken & { remember: boolean }>
 
 type FormData = z.infer<typeof formSchema>
 
@@ -59,6 +61,7 @@ function Login() {
     defaultValues: {
       username: "",
       password: "",
+      remember: true,
     },
   })
 
@@ -120,6 +123,25 @@ function Login() {
                     />
                   </FormControl>
                   <FormMessage className="text-xs" />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="remember"
+              render={({ field }) => (
+                <FormItem className="flex items-center gap-3 space-y-0">
+                  <FormControl>
+                    <Checkbox
+                      data-testid="remember-me-checkbox"
+                      checked={field.value}
+                      onCheckedChange={(checked) =>
+                        field.onChange(checked === true)
+                      }
+                    />
+                  </FormControl>
+                  <FormLabel className="font-normal">Remember me</FormLabel>
                 </FormItem>
               )}
             />
