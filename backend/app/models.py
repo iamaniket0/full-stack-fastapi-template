@@ -110,6 +110,11 @@ class Message(SQLModel):
     message: str
 
 
+# Current time on the server
+class ServerTime(SQLModel):
+    server_time: datetime
+
+
 # JSON payload containing access token
 class Token(SQLModel):
     access_token: str
