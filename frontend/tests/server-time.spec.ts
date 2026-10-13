@@ -93,3 +93,26 @@ test.describe("Server Time requires login", () => {
     await expect(page.getByTestId("server-time")).not.toBeVisible()
   })
 })
+
+test("Server Time re-syncs with the server periodically", async ({ page }) => {
+  const serverTimes = ["2000-01-01T12:00:00Z", "2010-06-01T08:00:00Z"]
+  let calls = 0
+  await page.route("**/api/v1/utils/server-time/", (route) => {
+    const server_time = serverTimes[Math.min(calls++, serverTimes.length - 1)]
+    return route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({ server_time }),
+    })
+  })
+  await page.clock.install()
+  await page.goto("/server-time")
+  await expect(page.getByTestId("server-time")).toContainText(
+    "UTC: 2000-01-01T12:00:0",
+  )
+
+  await page.clock.fastForward(31_000)
+  await expect(page.getByTestId("server-time")).toContainText(
+    "UTC: 2010-06-01T08:00:",
+  )
+})
