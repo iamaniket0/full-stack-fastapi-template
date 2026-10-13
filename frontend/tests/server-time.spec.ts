@@ -13,3 +13,16 @@ test("Server Time is reachable from the sidebar", async ({ page }) => {
   await expect(page).toHaveURL("/server-time")
   await expect(page.getByRole("heading", { name: "Server Time" })).toBeVisible()
 })
+
+test("Server Time shows an error when the server time cannot be loaded", async ({
+  page,
+}) => {
+  await page.route("**/api/v1/utils/server-time/", (route) =>
+    route.fulfill({ status: 500, body: "Internal Server Error" }),
+  )
+  await page.goto("/server-time")
+  await expect(page.getByText("Could not load the server time.")).toBeVisible({
+    timeout: 15_000,
+  })
+  await expect(page.getByTestId("server-time")).not.toBeVisible()
+})
