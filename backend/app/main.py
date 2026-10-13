@@ -33,4 +33,11 @@ app.add_middleware(
 )
 
 app.include_router(api_router, prefix=settings.API_V1_STR)
+
+
+@app.get("/status", tags=["utils"])
+async def status() -> dict[str, bool]:
+    return {"healthy": True}
+
+
 app.frontend("/", directory=FRONTEND_DIR)
