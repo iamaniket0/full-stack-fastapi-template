@@ -83,3 +83,13 @@ test("Server Time matches the real server clock and keeps ticking", async ({
 
   await expect.poll(readUtc, { timeout: 5_000 }).toBeGreaterThan(shown)
 })
+
+test.describe("Server Time requires login", () => {
+  test.use({ storageState: { cookies: [], origins: [] } })
+
+  test("Logged-out user is redirected to login", async ({ page }) => {
+    await page.goto("/server-time")
+    await expect(page).toHaveURL("/login")
+    await expect(page.getByTestId("server-time")).not.toBeVisible()
+  })
+})
