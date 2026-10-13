@@ -33,4 +33,11 @@ app.add_middleware(
 )
 
 app.include_router(api_router, prefix=settings.API_V1_STR)
+
+
+@app.get("/version", tags=["utils"])
+async def version() -> dict[str, str]:
+    return {"version": "1.0.0"}
+
+
 app.frontend("/", directory=FRONTEND_DIR)
