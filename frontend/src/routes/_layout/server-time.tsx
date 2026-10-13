@@ -8,14 +8,27 @@ import { Skeleton } from "@/components/ui/skeleton"
 // Re-sync with the server periodically; tick locally in between
 const SYNC_INTERVAL_MS = 30_000
 
+class InvalidServerTimeError extends Error {
+  constructor(value: unknown) {
+    super(`Invalid server time: ${String(value)}`)
+  }
+}
+
 function getServerTimeQueryOptions() {
   return {
     queryFn: async () => {
       const { data } = await UtilsService.serverTime()
+      const serverTime = new Date(data.server_time).getTime()
+      if (Number.isNaN(serverTime)) {
+        throw new InvalidServerTimeError(data.server_time)
+      }
       // Offset between server and client clocks, so we can tick locally
-      return new Date(data.server_time).getTime() - Date.now()
+      return serverTime - Date.now()
     },
     queryKey: ["server-time"],
+    // An invalid value won't fix itself on retry; fail fast
+    retry: (failureCount: number, error: Error) =>
+      !(error instanceof InvalidServerTimeError) && failureCount < 3,
     refetchInterval: SYNC_INTERVAL_MS,
   }
 }

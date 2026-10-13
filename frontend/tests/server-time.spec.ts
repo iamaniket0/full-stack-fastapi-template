@@ -42,3 +42,18 @@ test("Server Time shows the server's time, not the browser's", async ({
     "UTC: 2000-01-01T12:00:0",
   )
 })
+
+test("Server Time shows an error when the server time is invalid", async ({
+  page,
+}) => {
+  await page.route("**/api/v1/utils/server-time/", (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({ server_time: "not-a-date" }),
+    }),
+  )
+  await page.goto("/server-time")
+  await expect(page.getByText("Could not load the server time.")).toBeVisible()
+  await expect(page.getByTestId("server-time")).not.toBeVisible()
+})
