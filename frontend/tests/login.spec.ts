@@ -98,6 +98,44 @@ test("Log in without remember me stores token for the session only", async ({
   expect(tokens.session).not.toBeNull()
 })
 
+test("Remember me controls whether a new tab stays logged in", async ({
+  page,
+  context,
+}) => {
+  await page.goto("/login")
+
+  await fillForm(page, firstSuperuser, firstSuperuserPassword)
+  await page.getByTestId("remember-me-checkbox").click()
+  await page.getByRole("button", { name: "Log In" }).click()
+  await page.waitForURL("/")
+
+  // Session-only login survives a reload but not a fresh tab
+  await page.reload()
+  await expect(
+    page.getByText("Welcome back, nice to see you again!"),
+  ).toBeVisible()
+
+  const sessionTab = await context.newPage()
+  await sessionTab.goto("/")
+  await sessionTab.waitForURL("/login")
+  await sessionTab.close()
+
+  await page.getByTestId("user-menu").click()
+  await page.getByRole("menuitem", { name: "Log out" }).click()
+  await page.waitForURL("/login")
+
+  await expect(page.getByTestId("remember-me-checkbox")).toBeChecked()
+  await fillForm(page, firstSuperuser, firstSuperuserPassword)
+  await page.getByRole("button", { name: "Log In" }).click()
+  await page.waitForURL("/")
+
+  const rememberedTab = await context.newPage()
+  await rememberedTab.goto("/")
+  await expect(
+    rememberedTab.getByText("Welcome back, nice to see you again!"),
+  ).toBeVisible()
+})
+
 test("Log in with invalid email", async ({ page }) => {
   await page.goto("/login")
 
