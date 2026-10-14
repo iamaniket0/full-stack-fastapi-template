@@ -7,12 +7,17 @@ from pydantic.networks import EmailStr
 from app.api.deps import get_current_active_superuser
 from app.models import Message
 from app.utils import generate_test_email, send_email
+from app.version import __version__
 
 router = APIRouter(prefix="/utils", tags=["utils"])
 
 
 class ServerTime(BaseModel):
     time: str
+
+
+class VersionResponse(BaseModel):
+    version: str
 
 
 @router.post(
@@ -44,3 +49,11 @@ def get_time() -> ServerTime:
     Return the current server time (UTC) in ISO 8601 format.
     """
     return ServerTime(time=datetime.now(UTC).isoformat())
+
+
+@router.get("/version/")
+def get_version() -> VersionResponse:
+    """
+    Return the app version.
+    """
+    return VersionResponse(version=__version__)
