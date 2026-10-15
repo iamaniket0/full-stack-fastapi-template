@@ -3,6 +3,58 @@
 [![Test Docker Compose](../../actions/workflows/test-docker-compose.yml/badge.svg)](../../actions/workflows/test-docker-compose.yml)
 [![Test Backend](../../actions/workflows/test-backend.yml/badge.svg)](../../actions/workflows/test-backend.yml)
 
+## About the Project
+
+This is a full stack web application template. It gives you a ready-to-use starting point with a Python API backend, a React frontend, a PostgreSQL database, user authentication, and deployment setup, so you can focus on building your own features.
+
+Out of the box it includes:
+
+- User sign up, login, and password recovery by email.
+- An admin dashboard to manage users.
+- An example "Items" feature showing how to create, read, update, and delete data.
+- Automatically generated, interactive API documentation.
+
+### Project Structure
+
+- `backend/` - FastAPI application (API routes, database models, migrations, and tests).
+- `frontend/` - React + TypeScript application built with Vite.
+- `packages/react-email/` - Email templates built with React Email.
+- `scripts/` - Helper scripts for development and CI.
+- `compose*.yml` - Docker Compose files for local services and deployment.
+
+### Quick Start
+
+```bash
+# Start the database and local email server
+docker compose up -d db mailpit
+
+# Backend (from the backend directory)
+uv sync
+uv run bash scripts/prestart.sh
+uv run fastapi dev
+
+# Frontend (from the project root, in another terminal)
+bun install
+bun run dev
+```
+
+Then open the frontend at <http://localhost:5173> and the API docs at <http://localhost:8000/docs>. See [development.md](./development.md) for more details.
+
+### How It Can Be Improved
+
+Some ideas for taking the project further:
+
+- **Authentication** - add refresh tokens, social login (OAuth), and two-factor authentication.
+- **Security** - add rate limiting on login and password recovery endpoints.
+- **Background jobs** - move slow tasks like sending emails to a task queue (e.g. Celery or ARQ with Redis).
+- **Caching** - cache frequently read data to reduce database load.
+- **Observability** - add structured logging and metrics alongside the existing Sentry integration.
+- **Internationalization** - support multiple languages in the frontend and email templates.
+- **Testing** - increase test coverage, especially for the frontend and edge cases in the API.
+- **Documentation** - add architecture diagrams and more examples of extending the data models.
+
+Contributions are welcome, see [CONTRIBUTING.md](./CONTRIBUTING.md).
+
 ## Technology Stack and Features
 
 - ⚡ [**FastAPI**](https://fastapi.tiangolo.com) for the Python backend API.
