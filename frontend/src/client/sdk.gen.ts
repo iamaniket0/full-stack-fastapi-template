@@ -2,7 +2,7 @@
 
 import { type Client, type Options as Options2, type TDataShape, urlSearchParamsBodySerializer } from './client';
 import { client } from './client.gen';
-import type { itemsCreateItemData, itemsCreateItemErrors, itemsCreateItemResponses, itemsDeleteItemData, itemsDeleteItemErrors, itemsDeleteItemResponses, itemsExportItemsData, itemsExportItemsResponses, itemsReadItemData, itemsReadItemErrors, itemsReadItemResponses, itemsReadItemsData, itemsReadItemsErrors, itemsReadItemsResponses, itemsUpdateItemData, itemsUpdateItemErrors, itemsUpdateItemResponses, loginLoginAccessTokenData, loginLoginAccessTokenErrors, loginLoginAccessTokenResponses, loginRecoverPasswordData, loginRecoverPasswordErrors, loginRecoverPasswordHtmlContentData, loginRecoverPasswordHtmlContentErrors, loginRecoverPasswordHtmlContentResponses, loginRecoverPasswordResponses, loginResetPasswordData, loginResetPasswordErrors, loginResetPasswordResponses, loginTestTokenData, loginTestTokenResponses, privateCreateUserData, privateCreateUserErrors, privateCreateUserResponses, usersCreateUserData, usersCreateUserErrors, usersCreateUserResponses, usersDeleteUserData, usersDeleteUserErrors, usersDeleteUserMeData, usersDeleteUserMeResponses, usersDeleteUserResponses, usersReadUserByIdData, usersReadUserByIdErrors, usersReadUserByIdResponses, usersReadUserMeData, usersReadUserMeResponses, usersReadUsersData, usersReadUsersErrors, usersReadUsersResponses, usersRegisterUserData, usersRegisterUserErrors, usersRegisterUserResponses, usersUpdatePasswordMeData, usersUpdatePasswordMeErrors, usersUpdatePasswordMeResponses, usersUpdateUserData, usersUpdateUserErrors, usersUpdateUserMeData, usersUpdateUserMeErrors, usersUpdateUserMeResponses, usersUpdateUserResponses, utilsHealthCheckData, utilsHealthCheckResponses, utilsTestEmailData, utilsTestEmailErrors, utilsTestEmailResponses } from './types.gen';
+import type { itemsCreateItemData, itemsCreateItemErrors, itemsCreateItemResponses, itemsDeleteItemData, itemsDeleteItemErrors, itemsDeleteItemResponses, itemsExportItemsData, itemsExportItemsResponses, itemsReadItemData, itemsReadItemErrors, itemsReadItemResponses, itemsReadItemsCountData, itemsReadItemsCountResponses, itemsReadItemsData, itemsReadItemsErrors, itemsReadItemsResponses, itemsUpdateItemData, itemsUpdateItemErrors, itemsUpdateItemResponses, loginLoginAccessTokenData, loginLoginAccessTokenErrors, loginLoginAccessTokenResponses, loginRecoverPasswordData, loginRecoverPasswordErrors, loginRecoverPasswordHtmlContentData, loginRecoverPasswordHtmlContentErrors, loginRecoverPasswordHtmlContentResponses, loginRecoverPasswordResponses, loginResetPasswordData, loginResetPasswordErrors, loginResetPasswordResponses, loginTestTokenData, loginTestTokenResponses, privateCreateUserData, privateCreateUserErrors, privateCreateUserResponses, usersCreateUserData, usersCreateUserErrors, usersCreateUserResponses, usersDeleteUserData, usersDeleteUserErrors, usersDeleteUserMeData, usersDeleteUserMeResponses, usersDeleteUserResponses, usersReadUserByIdData, usersReadUserByIdErrors, usersReadUserByIdResponses, usersReadUserMeData, usersReadUserMeResponses, usersReadUsersData, usersReadUsersErrors, usersReadUsersResponses, usersRegisterUserData, usersRegisterUserErrors, usersRegisterUserResponses, usersUpdatePasswordMeData, usersUpdatePasswordMeErrors, usersUpdatePasswordMeResponses, usersUpdateUserData, usersUpdateUserErrors, usersUpdateUserMeData, usersUpdateUserMeErrors, usersUpdateUserMeResponses, usersUpdateUserResponses, utilsGetTimeData, utilsGetTimeResponses, utilsHealthCheckData, utilsHealthCheckResponses, utilsTestEmailData, utilsTestEmailErrors, utilsTestEmailResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -282,6 +282,19 @@ export class UtilsService {
             ...options
         });
     }
+    
+    /**
+     * Get Time
+     *
+     * Return the current server time (UTC) in ISO 8601 format.
+     */
+    public static getTime<ThrowOnError extends boolean = true>(options?: Options<utilsGetTimeData, ThrowOnError>) {
+        return (options?.client ?? client).get<utilsGetTimeResponses, unknown, ThrowOnError>({
+            responseType: 'json',
+            url: '/api/v1/utils/time/',
+            ...options
+        });
+    }
 }
 
 export class ItemsService {
@@ -318,15 +331,15 @@ export class ItemsService {
     }
     
     /**
-     * Delete Item
+     * Read Items Count
      *
-     * Delete an item.
+     * Get total count of items.
      */
-    public static deleteItem<ThrowOnError extends boolean = true>(options: Options<itemsDeleteItemData, ThrowOnError>) {
-        return (options.client ?? client).delete<itemsDeleteItemResponses, itemsDeleteItemErrors, ThrowOnError>({
+    public static readItemsCount<ThrowOnError extends boolean = true>(options?: Options<itemsReadItemsCountData, ThrowOnError>) {
+        return (options?.client ?? client).get<itemsReadItemsCountResponses, unknown, ThrowOnError>({
             responseType: 'json',
             security: [{ scheme: 'bearer', type: 'http' }],
-            url: '/api/v1/items/{id}',
+            url: '/api/v1/items/count',
             ...options
         });
     }
@@ -341,6 +354,20 @@ export class ItemsService {
             responseType: 'text',
             security: [{ scheme: 'bearer', type: 'http' }],
             url: '/api/v1/items/export',
+            ...options
+        });
+    }
+    
+    /**
+     * Delete Item
+     *
+     * Delete an item.
+     */
+    public static deleteItem<ThrowOnError extends boolean = true>(options: Options<itemsDeleteItemData, ThrowOnError>) {
+        return (options.client ?? client).delete<itemsDeleteItemResponses, itemsDeleteItemErrors, ThrowOnError>({
+            responseType: 'json',
+            security: [{ scheme: 'bearer', type: 'http' }],
+            url: '/api/v1/items/{id}',
             ...options
         });
     }
