@@ -11,9 +11,33 @@ import {
 import { handleError } from "@/utils"
 import useCustomToast from "./useCustomToast"
 
-const isLoggedIn = () => {
-  return localStorage.getItem("access_token") !== null
+const ACCESS_TOKEN_KEY = "access_token"
+
+const getAccessToken = () => {
+  return (
+    localStorage.getItem(ACCESS_TOKEN_KEY) ??
+    sessionStorage.getItem(ACCESS_TOKEN_KEY)
+  )
 }
+
+// "Remember me" keeps the token in localStorage so it survives browser
+// restarts; otherwise it lives in sessionStorage and is gone when the tab closes.
+const setAccessToken = (token: string, remember: boolean) => {
+  removeAccessToken()
+  const storage = remember ? localStorage : sessionStorage
+  storage.setItem(ACCESS_TOKEN_KEY, token)
+}
+
+const removeAccessToken = () => {
+  localStorage.removeItem(ACCESS_TOKEN_KEY)
+  sessionStorage.removeItem(ACCESS_TOKEN_KEY)
+}
+
+const isLoggedIn = () => {
+  return getAccessToken() !== null
+}
+
+type LoginData = AccessToken & { remember?: boolean }
 
 const useAuth = () => {
   const navigate = useNavigate()
@@ -38,11 +62,11 @@ const useAuth = () => {
     },
   })
 
-  const login = async (data: AccessToken) => {
+  const login = async ({ remember = true, ...data }: LoginData) => {
     const response = await LoginService.loginAccessToken({
       body: data,
     })
-    localStorage.setItem("access_token", response.data.access_token)
+    setAccessToken(response.data.access_token, remember)
   }
 
   const loginMutation = useMutation({
@@ -54,7 +78,7 @@ const useAuth = () => {
   })
 
   const logout = () => {
-    localStorage.removeItem("access_token")
+    removeAccessToken()
     navigate({ to: "/login" })
   }
 
@@ -66,5 +90,5 @@ const useAuth = () => {
   }
 }
 
-export { isLoggedIn }
+export { getAccessToken, isLoggedIn, removeAccessToken }
 export default useAuth
