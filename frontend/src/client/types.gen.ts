@@ -861,6 +861,20 @@ export type itemsDeleteItemResponses = {
 
 export type itemsDeleteItemResponse = itemsDeleteItemResponses[keyof itemsDeleteItemResponses];
 
+export type itemsExportItemsData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/items/export';
+};
+
+export type itemsExportItemsResponses = {
+    /**
+     * Successful Response
+     */
+    200: unknown;
+};
+
 export type itemsReadItemData = {
     body?: never;
     path: {

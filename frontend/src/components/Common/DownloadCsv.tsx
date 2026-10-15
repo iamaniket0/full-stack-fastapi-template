@@ -4,24 +4,14 @@ import { Download } from "lucide-react"
 import { ItemsService } from "@/client"
 import { LoadingButton } from "@/components/ui/loading-button"
 import useCustomToast from "@/hooks/useCustomToast"
-import { downloadCsv, handleError, toCsv } from "@/utils"
-
-const CSV_COLUMNS = [
-  "id",
-  "title",
-  "description",
-  "owner_id",
-  "created_at",
-] as const
+import { downloadCsv, handleError } from "@/utils"
 
 const DownloadCsv = () => {
   const { showSuccessToast, showErrorToast } = useCustomToast()
 
   const mutation = useMutation({
-    mutationFn: async () =>
-      (await ItemsService.readItems({ query: { skip: 0, limit: 1000 } })).data,
-    onSuccess: (items) => {
-      const csv = toCsv(items.data, [...CSV_COLUMNS])
+    mutationFn: async () => (await ItemsService.exportItems()).data as string,
+    onSuccess: (csv) => {
       downloadCsv("items.csv", csv)
       showSuccessToast("CSV downloaded successfully")
     },

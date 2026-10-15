@@ -5,6 +5,7 @@ import { Suspense } from "react"
 
 import { ItemsService } from "@/client"
 import { DataTable } from "@/components/Common/DataTable"
+import DownloadCsv from "@/components/Common/DownloadCsv"
 import AddItem from "@/components/Items/AddItem"
 import { columns } from "@/components/Items/columns"
 import PendingItems from "@/components/Pending/PendingItems"
@@ -63,6 +64,9 @@ function Items() {
           <p className="text-muted-foreground">Create and manage your items</p>
         </div>
         <AddItem />
+      </div>
+      <div className="flex justify-end">
+        <DownloadCsv />
       </div>
       <ItemsTable />
     </div>

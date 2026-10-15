@@ -16,6 +16,11 @@ test("Download CSV button is visible on the dashboard after login", async ({
   await expect(page.getByRole("button", { name: "Download CSV" })).toBeVisible()
 })
 
+test("Download CSV button is visible on the items page", async ({ page }) => {
+  await page.goto("/items")
+  await expect(page.getByRole("button", { name: "Download CSV" })).toBeVisible()
+})
+
 test.describe("Download CSV", () => {
   test.use({ storageState: { cookies: [], origins: [] } })
 
@@ -34,7 +39,6 @@ test.describe("Download CSV", () => {
     await page.getByRole("button", { name: "Save" }).click()
     await expect(page.getByText("Item created successfully")).toBeVisible()
 
-    await page.goto("/")
     const downloadPromise = page.waitForEvent("download")
     await page.getByRole("button", { name: "Download CSV" }).click()
     const download = await downloadPromise
@@ -42,9 +46,7 @@ test.describe("Download CSV", () => {
     expect(download.suggestedFilename()).toBe("items.csv")
     const path = await download.path()
     const content = await readFile(path, "utf-8")
-    expect(content.split("\r\n")[0]).toBe(
-      "id,title,description,owner_id,created_at",
-    )
+    expect(content.split("\r\n")[0]).toBe("id,title,description")
     expect(content).toContain(title)
     expect(content).toContain(description)
   })
