@@ -85,4 +85,33 @@ test.describe("Download CSV", () => {
     expect(content).toContain(title)
     expect(content).not.toContain(otherTitle)
   })
+
+  test("CSV escapes commas and quotes in item fields", async ({ page }) => {
+    const email = randomEmail()
+    const password = randomPassword()
+    await createUser({ email, password })
+    await logInUser(page, email, password)
+
+    const title = randomItemTitle()
+    const description = `has, comma and "quotes" ${randomItemDescription()}`
+    await page.goto("/items")
+    await page.getByRole("button", { name: "Add Item" }).click()
+    await page.getByLabel("Title").fill(title)
+    await page.getByLabel("Description").fill(description)
+    await page.getByRole("button", { name: "Save" }).click()
+    await expect(page.getByText("Item created successfully")).toBeVisible()
+
+    const downloadPromise = page.waitForEvent("download")
+    await page.getByRole("button", { name: "Download CSV" }).click()
+    const download = await downloadPromise
+
+    const content = await readFile(await download.path(), "utf-8")
+    const rows = content.trim().split("\r\n")
+    expect(rows).toHaveLength(2)
+    expect(rows[1]).toMatch(
+      new RegExp(
+        `^[0-9a-f-]{36},${title},"${description.replace(/"/g, '""')}"$`,
+      ),
+    )
+  })
 })
