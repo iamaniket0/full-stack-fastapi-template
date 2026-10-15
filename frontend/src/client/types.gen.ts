@@ -159,6 +159,16 @@ export type PrivateUserCreate = {
 };
 
 /**
+ * ServerTime
+ */
+export type ServerTime = {
+    /**
+     * Time
+     */
+    time: string;
+};
+
+/**
  * Token
  */
 export type Token = {
@@ -772,6 +782,22 @@ export type utilsHealthCheckResponses = {
 
 export type utilsHealthCheckResponse = utilsHealthCheckResponses[keyof utilsHealthCheckResponses];
 
+export type utilsGetTimeData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/utils/time/';
+};
+
+export type utilsGetTimeResponses = {
+    /**
+     * Successful Response
+     */
+    200: ServerTime;
+};
+
+export type utilsGetTimeResponse = utilsGetTimeResponses[keyof utilsGetTimeResponses];
+
 export type itemsReadItemsData = {
     body?: never;
     path?: never;
@@ -830,6 +856,38 @@ export type itemsCreateItemResponses = {
 };
 
 export type itemsCreateItemResponse = itemsCreateItemResponses[keyof itemsCreateItemResponses];
+
+export type itemsReadItemsCountData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/items/count';
+};
+
+export type itemsReadItemsCountResponses = {
+    /**
+     * Response Items-Read Items Count
+     *
+     * Successful Response
+     */
+    200: number;
+};
+
+export type itemsReadItemsCountResponse = itemsReadItemsCountResponses[keyof itemsReadItemsCountResponses];
+
+export type itemsExportItemsData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/items/export';
+};
+
+export type itemsExportItemsResponses = {
+    /**
+     * Successful Response
+     */
+    200: unknown;
+};
 
 export type itemsDeleteItemData = {
     body?: never;

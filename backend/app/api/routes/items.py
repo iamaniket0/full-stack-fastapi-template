@@ -1,7 +1,9 @@
+import csv
+import io
 import uuid
 from typing import Any
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Response
 from sqlmodel import col, func, select
 
 from app.api.deps import CurrentUser, SessionDep
@@ -46,9 +48,7 @@ def read_items(
 
 
 @router.get("/count", response_model=int)
-def read_items_count(
-    session: SessionDep, current_user: CurrentUser
-) -> Any:
+def read_items_count(session: SessionDep, current_user: CurrentUser) -> Any:
     """
     Get total count of items.
     """
@@ -62,6 +62,35 @@ def read_items_count(
         )
     count = session.exec(count_statement).one()
     return count
+
+
+@router.get(
+    "/export",
+    response_class=Response,
+    responses={200: {"content": {"text/csv": {}}}},
+)
+def export_items(session: SessionDep, current_user: CurrentUser) -> Response:
+    """
+    Export the current user's own items as CSV (id, title, description).
+    """
+    statement = (
+        select(Item)
+        .where(Item.owner_id == current_user.id)
+        .order_by(col(Item.created_at).desc())
+    )
+    items = session.exec(statement).all()
+
+    buffer = io.StringIO()
+    writer = csv.writer(buffer)
+    writer.writerow(["id", "title", "description"])
+    for item in items:
+        writer.writerow([item.id, item.title, item.description or ""])
+
+    return Response(
+        content=buffer.getvalue(),
+        media_type="text/csv",
+        headers={"Content-Disposition": 'attachment; filename="items.csv"'},
+    )
 
 
 @router.get("/{id}", response_model=ItemPublic)
