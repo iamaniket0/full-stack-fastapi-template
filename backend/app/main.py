@@ -32,5 +32,11 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
+@app.get("/ping", tags=["utils"])
+async def ping() -> dict[str, bool]:
+    return {"ok": True}
+
+
 app.include_router(api_router, prefix=settings.API_V1_STR)
 app.frontend("/", directory=FRONTEND_DIR)
