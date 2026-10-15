@@ -48,9 +48,7 @@ def read_items(
 
 
 @router.get("/count", response_model=int)
-def read_items_count(
-    session: SessionDep, current_user: CurrentUser
-) -> Any:
+def read_items_count(session: SessionDep, current_user: CurrentUser) -> Any:
     """
     Get total count of items.
     """
