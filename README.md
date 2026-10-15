@@ -3,6 +3,43 @@
 [![Test Docker Compose](../../actions/workflows/test-docker-compose.yml/badge.svg)](../../actions/workflows/test-docker-compose.yml)
 [![Test Backend](../../actions/workflows/test-backend.yml/badge.svg)](../../actions/workflows/test-backend.yml)
 
+## About the Project
+
+This is a full stack web application template. It gives you a ready-to-use starting point with a Python API backend, a React frontend, a PostgreSQL database, user authentication, and deployment setup, so you can focus on building your own features.
+
+Out of the box it includes:
+
+- User sign up, login, and password recovery by email.
+- An admin dashboard to manage users.
+- An example "Items" feature showing how to create, read, update, and delete data.
+- Automatically generated, interactive API documentation.
+
+### Project Structure
+
+- `backend/` - FastAPI application (API routes, database models, migrations, and tests).
+- `frontend/` - React + TypeScript application built with Vite.
+- `packages/react-email/` - Email templates built with React Email.
+- `scripts/` - Helper scripts for development and CI.
+- `compose*.yml` - Docker Compose files for local services and deployment.
+
+### Quick Start
+
+```bash
+# Start the database and local email server
+docker compose up -d db mailpit
+
+# Backend (from the backend directory)
+uv sync
+uv run bash scripts/prestart.sh
+uv run fastapi dev
+
+# Frontend (from the project root, in another terminal)
+bun install
+bun run dev
+```
+
+Then open the frontend at <http://localhost:5173> and the API docs at <http://localhost:8000/docs>. See [development.md](./development.md) for more details.
+
 ## Technology Stack and Features
 
 - ⚡ [**FastAPI**](https://fastapi.tiangolo.com) for the Python backend API.
