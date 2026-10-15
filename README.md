@@ -40,6 +40,21 @@ bun run dev
 
 Then open the frontend at <http://localhost:5173> and the API docs at <http://localhost:8000/docs>. See [development.md](./development.md) for more details.
 
+### How It Can Be Improved
+
+Some ideas for taking the project further:
+
+- **Authentication** - add refresh tokens, social login (OAuth), and two-factor authentication.
+- **Security** - add rate limiting on login and password recovery endpoints.
+- **Background jobs** - move slow tasks like sending emails to a task queue (e.g. Celery or ARQ with Redis).
+- **Caching** - cache frequently read data to reduce database load.
+- **Observability** - add structured logging and metrics alongside the existing Sentry integration.
+- **Internationalization** - support multiple languages in the frontend and email templates.
+- **Testing** - increase test coverage, especially for the frontend and edge cases in the API.
+- **Documentation** - add architecture diagrams and more examples of extending the data models.
+
+Contributions are welcome, see [CONTRIBUTING.md](./CONTRIBUTING.md).
+
 ## Technology Stack and Features
 
 - ⚡ [**FastAPI**](https://fastapi.tiangolo.com) for the Python backend API.
