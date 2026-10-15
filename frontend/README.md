@@ -120,4 +120,20 @@ docker compose down -v
 
 To update the tests, navigate to the tests directory and modify the existing test files or add new ones as needed.
 
+### Frontend-only E2E tests (no backend)
+
+There is also a separate Playwright suite in `tests-frontend/` that runs against the Vite dev server only. Every API call is mocked with `page.route` (see `tests-frontend/fixtures.ts`), so no Docker Compose stack, database or mail server is needed:
+
+```bash
+bun run test:frontend
+```
+
+Or in UI mode:
+
+```bash
+bun run test:frontend:ui
+```
+
+The suite starts its own dev server on port `5174` (override with `PLAYWRIGHT_FRONTEND_PORT`). Each test gets a fresh in-memory `MockApi` via the `api` fixture; adjust `api.user` / `api.items`, or override an endpoint with `api.on(method, url, handler)`. Any request that is not mocked fails with a `501` so tests never silently hit a real backend.
+
 For more information on writing and running Playwright tests, refer to the official [Playwright documentation](https://playwright.dev/docs/intro).
