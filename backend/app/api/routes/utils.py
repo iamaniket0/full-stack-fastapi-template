@@ -39,3 +39,11 @@ def get_time() -> ServerTime:
     Return the current server time (UTC) in ISO 8601 format.
     """
     return ServerTime(time=datetime.now(UTC).isoformat())
+
+
+@router.get("/ping/")
+def ping() -> Message:
+    """
+    Simple liveness check that responds with "pong".
+    """
+    return Message(message="pong")
