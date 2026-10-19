@@ -1,10 +1,11 @@
 from datetime import UTC, datetime
+from importlib.metadata import PackageNotFoundError, version
 
 from fastapi import APIRouter, Depends
 from pydantic.networks import EmailStr
 
 from app.api.deps import get_current_active_superuser
-from app.models import Message, ServerTime
+from app.models import AppVersion, Message, ServerTime
 from app.utils import generate_test_email, send_email
 
 router = APIRouter(prefix="/utils", tags=["utils"])
@@ -39,3 +40,15 @@ def get_time() -> ServerTime:
     Return the current server time (UTC) in ISO 8601 format.
     """
     return ServerTime(time=datetime.now(UTC).isoformat())
+
+
+@router.get("/version/")
+def get_version() -> AppVersion:
+    """
+    Return the application version as declared in pyproject.toml.
+    """
+    try:
+        app_version = version("app")
+    except PackageNotFoundError:
+        app_version = "unknown"
+    return AppVersion(version=app_version)
