@@ -115,6 +115,11 @@ class ServerTime(SQLModel):
     time: str
 
 
+# Application version
+class AppVersion(SQLModel):
+    version: str
+
+
 # JSON payload containing access token
 class Token(SQLModel):
     access_token: str
