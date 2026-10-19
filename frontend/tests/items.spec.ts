@@ -130,3 +130,41 @@ test.describe("Items empty state", () => {
     await expect(page.getByText("Add a new item to get started")).toBeVisible()
   })
 })
+
+test.describe("Items are private to their owner", () => {
+  test.use({ storageState: { cookies: [], origins: [] } })
+
+  test("Another user cannot see an item after reload", async ({
+    page,
+    browser,
+  }) => {
+    const ownerEmail = randomEmail()
+    const otherEmail = randomEmail()
+    const password = randomPassword()
+    await createUser({ email: ownerEmail, password })
+    await createUser({ email: otherEmail, password })
+
+    const title = randomItemTitle()
+    await logInUser(page, ownerEmail, password)
+    await page.goto("/items")
+    await page.getByRole("button", { name: "Add Item" }).click()
+    await page.getByLabel("Title").fill(title)
+    await page.getByRole("button", { name: "Save" }).click()
+    await expect(page.getByText("Item created successfully")).toBeVisible()
+
+    await page.reload()
+    await expect(page.getByText(title)).toBeVisible()
+
+    const otherContext = await browser.newContext({
+      storageState: { cookies: [], origins: [] },
+    })
+    const otherPage = await otherContext.newPage()
+    await logInUser(otherPage, otherEmail, password)
+    await otherPage.goto("/items")
+    await expect(
+      otherPage.getByText("You don't have any items yet"),
+    ).toBeVisible()
+    await expect(otherPage.getByText(title)).not.toBeVisible()
+    await otherContext.close()
+  })
+})
