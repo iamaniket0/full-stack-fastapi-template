@@ -115,6 +115,10 @@ class ServerTime(SQLModel):
     time: str
 
 
+class Ping(SQLModel):
+    ok: bool
+
+
 # JSON payload containing access token
 class Token(SQLModel):
     access_token: str
