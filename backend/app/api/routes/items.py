@@ -7,7 +7,15 @@ from fastapi import APIRouter, HTTPException, Response
 from sqlmodel import col, func, select
 
 from app.api.deps import CurrentUser, SessionDep
-from app.models import Item, ItemCreate, ItemPublic, ItemsPublic, ItemUpdate, Message
+from app.models import (
+    Item,
+    ItemCreate,
+    ItemPublic,
+    ItemsCount,
+    ItemsPublic,
+    ItemUpdate,
+    Message,
+)
 
 router = APIRouter(prefix="/items", tags=["items"])
 
@@ -47,21 +55,16 @@ def read_items(
     return ItemsPublic(data=items_public, count=count)
 
 
-@router.get("/count", response_model=int)
+@router.get("/count", response_model=ItemsCount)
 def read_items_count(session: SessionDep, current_user: CurrentUser) -> Any:
     """
-    Get total count of items.
+    Get the number of items owned by the current user.
     """
-    if current_user.is_superuser:
-        count_statement = select(func.count()).select_from(Item)
-    else:
-        count_statement = (
-            select(func.count())
-            .select_from(Item)
-            .where(Item.owner_id == current_user.id)
-        )
+    count_statement = (
+        select(func.count()).select_from(Item).where(Item.owner_id == current_user.id)
+    )
     count = session.exec(count_statement).one()
-    return count
+    return ItemsCount(count=count)
 
 
 @router.get(

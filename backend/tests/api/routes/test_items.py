@@ -170,43 +170,58 @@ def test_delete_item_not_enough_permissions(
 
 
 def test_read_items_count(
-    client: TestClient, superuser_token_headers: dict[str, str], db: Session
-) -> None:
-    # Create some items
-    create_random_item(db)
-    create_random_item(db)
-    create_random_item(db)
-
-    # Test the count endpoint
-    response = client.get(
-        f"{settings.API_V1_STR}/items/count",
-        headers=superuser_token_headers,
-    )
-    assert response.status_code == 200
-    count = response.json()
-    assert isinstance(count, int)
-    assert count >= 3
-
-
-def test_read_items_count_normal_user(
     client: TestClient, normal_user_token_headers: dict[str, str], db: Session
 ) -> None:
-    # Create an item owned by the logged-in normal user
     user = crud.get_user_by_email(session=db, email=settings.EMAIL_TEST_USER)
     assert user
-    item_in = ItemCreate(title=random_lower_string(), description="Mine")
-    crud.create_item(session=db, item_in=item_in, owner_id=user.id)
-    create_random_item(db)
-
-    # Test the count endpoint for normal user (should only count their own items)
     response = client.get(
         f"{settings.API_V1_STR}/items/count",
         headers=normal_user_token_headers,
     )
     assert response.status_code == 200
-    count = response.json()
-    assert isinstance(count, int)
-    assert count >= 1
+    before = response.json()["count"]
+
+    # Two items owned by the logged-in user, one owned by someone else
+    for _ in range(2):
+        item_in = ItemCreate(title=random_lower_string(), description="Mine")
+        crud.create_item(session=db, item_in=item_in, owner_id=user.id)
+    create_random_item(db)
+
+    response = client.get(
+        f"{settings.API_V1_STR}/items/count",
+        headers=normal_user_token_headers,
+    )
+    assert response.status_code == 200
+    content = response.json()
+    assert content == {"count": before + 2}
+
+
+def test_read_items_count_superuser_only_own_items(
+    client: TestClient, superuser_token_headers: dict[str, str], db: Session
+) -> None:
+    superuser = crud.get_user_by_email(session=db, email=settings.FIRST_SUPERUSER)
+    assert superuser
+    response = client.get(
+        f"{settings.API_V1_STR}/items/count",
+        headers=superuser_token_headers,
+    )
+    assert response.status_code == 200
+    before = response.json()["count"]
+
+    # Items owned by other users must not be counted, even for a superuser
+    create_random_item(db)
+
+    response = client.get(
+        f"{settings.API_V1_STR}/items/count",
+        headers=superuser_token_headers,
+    )
+    assert response.status_code == 200
+    assert response.json() == {"count": before}
+
+
+def test_read_items_count_requires_login(client: TestClient) -> None:
+    response = client.get(f"{settings.API_V1_STR}/items/count")
+    assert response.status_code == 401
 
 
 def test_export_items_csv(
