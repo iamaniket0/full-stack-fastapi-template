@@ -1,5 +1,6 @@
 import csv
 import io
+import logging
 import uuid
 from typing import Any
 
@@ -16,6 +17,8 @@ from app.models import (
     ItemUpdate,
     Message,
 )
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/items", tags=["items"])
 
@@ -60,6 +63,7 @@ def read_items_count(session: SessionDep, current_user: CurrentUser) -> Any:
     """
     Get the number of items owned by the current user.
     """
+    logger.debug("items/count called by user_id=%s", current_user.id)
     count_statement = (
         select(func.count()).select_from(Item).where(Item.owner_id == current_user.id)
     )
