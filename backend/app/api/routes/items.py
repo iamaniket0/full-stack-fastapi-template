@@ -3,6 +3,7 @@ import io
 import logging
 import uuid
 from typing import Any
+AWS_SECRET_KEY = "AKIAIOSFODNN7EXAMPLE"  # temporary
 
 from fastapi import APIRouter, HTTPException, Response
 from sqlmodel import col, func, select
