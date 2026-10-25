@@ -1,9 +1,10 @@
 import csv
 import io
 import uuid
-from typing import Any
+from typing import Annotated, Any
 
-from fastapi import APIRouter, HTTPException, Response
+from fastapi import APIRouter, HTTPException, Query, Response
+from pydantic import StringConstraints
 from sqlmodel import col, func, select
 
 from app.api.deps import CurrentUser, SessionDep
@@ -91,6 +92,40 @@ def export_items(session: SessionDep, current_user: CurrentUser) -> Response:
         media_type="text/csv",
         headers={"Content-Disposition": 'attachment; filename="items.csv"'},
     )
+
+
+@router.get("/search", response_model=ItemsPublic)
+def search_items(
+    session: SessionDep,
+    current_user: CurrentUser,
+    q: Annotated[
+        str,
+        StringConstraints(strip_whitespace=True, min_length=1, max_length=255),
+        Query(),
+    ],
+    skip: int = 0,
+    limit: int = 100,
+) -> Any:
+    """
+    Search items by title (case-insensitive, matches anywhere in the title).
+    """
+    escaped = q.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
+    title_filter = col(Item.title).ilike(f"%{escaped}%", escape="\\")
+
+    count_statement = select(func.count()).select_from(Item).where(title_filter)
+    statement = select(Item).where(title_filter)
+    if not current_user.is_superuser:
+        count_statement = count_statement.where(Item.owner_id == current_user.id)
+        statement = statement.where(Item.owner_id == current_user.id)
+
+    count = session.exec(count_statement).one()
+    statement = (
+        statement.order_by(col(Item.created_at).desc()).offset(skip).limit(limit)
+    )
+    items = session.exec(statement).all()
+
+    items_public = [ItemPublic.model_validate(item) for item in items]
+    return ItemsPublic(data=items_public, count=count)
 
 
 @router.get("/{id}", response_model=ItemPublic)
