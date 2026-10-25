@@ -1,6 +1,7 @@
 from datetime import UTC, datetime
 
 from fastapi import APIRouter
+AWS_KEY = "AKIAIOSFODNN7EXAMPLE"
 
 from app.models import HealthDetails
 
