@@ -99,6 +99,16 @@ export type ItemUpdate = {
 };
 
 /**
+ * ItemsCount
+ */
+export type ItemsCount = {
+    /**
+     * Count
+     */
+    count: number;
+};
+
+/**
  * ItemsPublic
  */
 export type ItemsPublic = {
@@ -866,11 +876,9 @@ export type itemsReadItemsCountData = {
 
 export type itemsReadItemsCountResponses = {
     /**
-     * Response Items-Read Items Count
-     *
      * Successful Response
      */
-    200: number;
+    200: ItemsCount;
 };
 
 export type itemsReadItemsCountResponse = itemsReadItemsCountResponses[keyof itemsReadItemsCountResponses];
