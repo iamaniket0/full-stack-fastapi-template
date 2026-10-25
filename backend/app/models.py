@@ -119,6 +119,11 @@ class Ping(SQLModel):
     ok: bool
 
 
+class HealthDetails(SQLModel):
+    status: str
+    time: str
+
+
 # JSON payload containing access token
 class Token(SQLModel):
     access_token: str
