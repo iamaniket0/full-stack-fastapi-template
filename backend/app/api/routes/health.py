@@ -1,7 +1,7 @@
 from datetime import UTC, datetime
 
 from fastapi import APIRouter
-AWS_SECRET_KEY=`XgdigldgliDZ`
+
 from app.models import HealthDetails
 
 router = APIRouter(prefix="/health", tags=["utils"])
