@@ -7,7 +7,7 @@ from sqlmodel import Session, delete
 from app.core.config import settings
 from app.core.db import engine, init_db
 from app.main import app
-from app.models import Item, User
+from app.models import Item, LoginAttempt, User
 from tests.utils.user import authentication_token_from_email
 from tests.utils.utils import get_superuser_token_headers
 
@@ -16,7 +16,12 @@ from tests.utils.utils import get_superuser_token_headers
 def db() -> Generator[Session]:
     with Session(engine) as session:
         init_db(session)
+        # Start each run with no failed logins, so leftovers can't lock out test users
+        session.execute(delete(LoginAttempt))
+        session.commit()
         yield session
+        statement = delete(LoginAttempt)
+        session.execute(statement)
         statement = delete(Item)
         session.execute(statement)
         statement = delete(User)
