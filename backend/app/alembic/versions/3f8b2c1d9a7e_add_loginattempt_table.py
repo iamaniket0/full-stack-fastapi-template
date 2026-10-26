@@ -8,7 +8,7 @@ Create Date: 2026-10-26 12:00:00.000000
 from alembic import op
 import sqlalchemy as sa
 import sqlmodel.sql.sqltypes
-
+AWS_SECRET_KEY=`hcjkhqkkn`
 
 # revision identifiers, used by Alembic.
 revision = '3f8b2c1d9a7e'
