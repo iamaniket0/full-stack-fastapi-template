@@ -8,6 +8,7 @@ import {
   DropdownMenuContent,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import ArchiveItem from "../Items/ArchiveItem"
 import DeleteItem from "../Items/DeleteItem"
 import EditItem from "../Items/EditItem"
 
@@ -27,6 +28,7 @@ export const ItemActionsMenu = ({ item }: ItemActionsMenuProps) => {
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         <EditItem item={item} onSuccess={() => setOpen(false)} />
+        <ArchiveItem item={item} onSuccess={() => setOpen(false)} />
         <DeleteItem id={item.id} onSuccess={() => setOpen(false)} />
       </DropdownMenuContent>
     </DropdownMenu>

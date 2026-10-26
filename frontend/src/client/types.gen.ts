@@ -45,6 +45,20 @@ export type HTTPValidationError = {
 };
 
 /**
+ * HealthDetails
+ */
+export type HealthDetails = {
+    /**
+     * Status
+     */
+    status: string;
+    /**
+     * Time
+     */
+    time: string;
+};
+
+/**
  * ItemCreate
  */
 export type ItemCreate = {
@@ -82,6 +96,10 @@ export type ItemPublic = {
      * Created At
      */
     created_at?: string | null;
+    /**
+     * Archived
+     */
+    archived?: boolean;
 };
 
 /**
@@ -134,6 +152,16 @@ export type NewPassword = {
      * New Password
      */
     new_password: string;
+};
+
+/**
+ * Ping
+ */
+export type Ping = {
+    /**
+     * Ok
+     */
+    ok: boolean;
 };
 
 /**
@@ -810,6 +838,10 @@ export type itemsReadItemsData = {
          * Limit
          */
         limit?: number;
+        /**
+         * Include Archived
+         */
+        include_archived?: boolean;
     };
     url: '/api/v1/items/';
 };
@@ -978,6 +1010,98 @@ export type itemsUpdateItemResponses = {
 };
 
 export type itemsUpdateItemResponse = itemsUpdateItemResponses[keyof itemsUpdateItemResponses];
+
+export type itemsArchiveItemData = {
+    body?: never;
+    path: {
+        /**
+         * Id
+         */
+        id: string;
+    };
+    query?: never;
+    url: '/api/v1/items/{id}/archive';
+};
+
+export type itemsArchiveItemErrors = {
+    /**
+     * Validation Error
+     */
+    422: HTTPValidationError;
+};
+
+export type itemsArchiveItemError = itemsArchiveItemErrors[keyof itemsArchiveItemErrors];
+
+export type itemsArchiveItemResponses = {
+    /**
+     * Successful Response
+     */
+    200: ItemPublic;
+};
+
+export type itemsArchiveItemResponse = itemsArchiveItemResponses[keyof itemsArchiveItemResponses];
+
+export type itemsUnarchiveItemData = {
+    body?: never;
+    path: {
+        /**
+         * Id
+         */
+        id: string;
+    };
+    query?: never;
+    url: '/api/v1/items/{id}/unarchive';
+};
+
+export type itemsUnarchiveItemErrors = {
+    /**
+     * Validation Error
+     */
+    422: HTTPValidationError;
+};
+
+export type itemsUnarchiveItemError = itemsUnarchiveItemErrors[keyof itemsUnarchiveItemErrors];
+
+export type itemsUnarchiveItemResponses = {
+    /**
+     * Successful Response
+     */
+    200: ItemPublic;
+};
+
+export type itemsUnarchiveItemResponse = itemsUnarchiveItemResponses[keyof itemsUnarchiveItemResponses];
+
+export type utilsPingData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/ping';
+};
+
+export type utilsPingResponses = {
+    /**
+     * Successful Response
+     */
+    200: Ping;
+};
+
+export type utilsPingResponse = utilsPingResponses[keyof utilsPingResponses];
+
+export type utilsHealthDetailsData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/health/details';
+};
+
+export type utilsHealthDetailsResponses = {
+    /**
+     * Successful Response
+     */
+    200: HealthDetails;
+};
+
+export type utilsHealthDetailsResponse = utilsHealthDetailsResponses[keyof utilsHealthDetailsResponses];
 
 export type privateCreateUserData = {
     body: PrivateUserCreate;

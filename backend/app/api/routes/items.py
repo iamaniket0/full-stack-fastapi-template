@@ -4,6 +4,7 @@ import uuid
 from typing import Any
 
 from fastapi import APIRouter, HTTPException, Response
+from sqlalchemy import ColumnElement
 from sqlmodel import col, func, select
 
 from app.api.deps import CurrentUser, SessionDep
@@ -14,34 +15,31 @@ router = APIRouter(prefix="/items", tags=["items"])
 
 @router.get("/", response_model=ItemsPublic)
 def read_items(
-    session: SessionDep, current_user: CurrentUser, skip: int = 0, limit: int = 100
+    session: SessionDep,
+    current_user: CurrentUser,
+    skip: int = 0,
+    limit: int = 100,
+    include_archived: bool = False,
 ) -> Any:
     """
-    Retrieve items.
+    Retrieve items. Archived items are hidden unless include_archived is true.
     """
+    filters: list[ColumnElement[bool]] = []
+    if not current_user.is_superuser:
+        filters.append(col(Item.owner_id) == current_user.id)
+    if not include_archived:
+        filters.append(col(Item.archived).is_(False))
 
-    if current_user.is_superuser:
-        count_statement = select(func.count()).select_from(Item)
-        count = session.exec(count_statement).one()
-        statement = (
-            select(Item).order_by(col(Item.created_at).desc()).offset(skip).limit(limit)
-        )
-        items = session.exec(statement).all()
-    else:
-        count_statement = (
-            select(func.count())
-            .select_from(Item)
-            .where(Item.owner_id == current_user.id)
-        )
-        count = session.exec(count_statement).one()
-        statement = (
-            select(Item)
-            .where(Item.owner_id == current_user.id)
-            .order_by(col(Item.created_at).desc())
-            .offset(skip)
-            .limit(limit)
-        )
-        items = session.exec(statement).all()
+    count_statement = select(func.count()).select_from(Item).where(*filters)
+    count = session.exec(count_statement).one()
+    statement = (
+        select(Item)
+        .where(*filters)
+        .order_by(col(Item.created_at).desc())
+        .offset(skip)
+        .limit(limit)
+    )
+    items = session.exec(statement).all()
 
     items_public = [ItemPublic.model_validate(item) for item in items]
     return ItemsPublic(data=items_public, count=count)
@@ -142,6 +140,40 @@ def update_item(
     session.commit()
     session.refresh(item)
     return item
+
+
+def _set_archived(
+    session: SessionDep, current_user: CurrentUser, id: uuid.UUID, archived: bool
+) -> Item:
+    item = session.get(Item, id)
+    if not item:
+        raise HTTPException(status_code=404, detail="Item not found")
+    if not current_user.is_superuser and (item.owner_id != current_user.id):
+        raise HTTPException(status_code=403, detail="Not enough permissions")
+    if item.archived != archived:
+        item.archived = archived
+        session.add(item)
+        session.commit()
+        session.refresh(item)
+    return item
+
+
+@router.patch("/{id}/archive", response_model=ItemPublic)
+def archive_item(session: SessionDep, current_user: CurrentUser, id: uuid.UUID) -> Any:
+    """
+    Archive an item.
+    """
+    return _set_archived(session, current_user, id, archived=True)
+
+
+@router.patch("/{id}/unarchive", response_model=ItemPublic)
+def unarchive_item(
+    session: SessionDep, current_user: CurrentUser, id: uuid.UUID
+) -> Any:
+    """
+    Unarchive an item.
+    """
+    return _set_archived(session, current_user, id, archived=False)
 
 
 @router.delete("/{id}")
