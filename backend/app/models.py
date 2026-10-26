@@ -115,6 +115,10 @@ class ServerTime(SQLModel):
     time: str
 
 
+class PublicIP(SQLModel):
+    ip: str
+
+
 class Ping(SQLModel):
     ok: bool
 
