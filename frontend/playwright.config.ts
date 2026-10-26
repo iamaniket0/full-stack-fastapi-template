@@ -1,7 +1,11 @@
 import { defineConfig, devices } from '@playwright/test';
 import 'dotenv/config'
 
-const baseURL = process.env.PLAYWRIGHT_BASE_URL ?? 'http://localhost:5173'
+// Dedicated port so a dev server from another checkout on 5173 is never reused
+const frontendPort = 5174
+const baseURL =
+  process.env.PLAYWRIGHT_BASE_URL ?? `http://localhost:${frontendPort}`
+const apiURL = process.env.VITE_API_URL ?? 'http://localhost:8000'
 
 /**
  * Read environment variables from file.
@@ -22,7 +26,7 @@ export default defineConfig({
   /* Opt out of parallel tests on CI. */
   workers: process.env.CI ? 1 : undefined,
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
-  reporter: process.env.CI ? 'blob' : 'html',
+  reporter: process.env.CI ? 'blob' : [['html', { open: 'never' }]],
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
     /* Base URL to use in actions like `await page.goto('/')`. */
@@ -87,9 +91,21 @@ export default defineConfig({
   /* Run your local dev server before starting the tests */
   webServer: process.env.PLAYWRIGHT_BASE_URL
     ? undefined
-    : {
-        command: 'bun run dev',
-        url: baseURL,
-        reuseExistingServer: !process.env.CI,
-      },
+    : [
+        {
+          // Same steps as backend/scripts/prestart.sh, then start the API
+          command:
+            'uv run alembic upgrade head && uv run python app/initial_data.py && uv run uvicorn app.main:app --port 8000',
+          cwd: '../backend',
+          url: `${apiURL}/api/v1/utils/health-check/`,
+          env: { FASTAPI_ENV: 'development', FRONTEND_HOST: baseURL },
+          reuseExistingServer: !process.env.CI,
+          timeout: 120_000,
+        },
+        {
+          command: `bun run dev --port ${frontendPort} --strictPort`,
+          url: baseURL,
+          reuseExistingServer: false,
+        },
+      ],
 });
