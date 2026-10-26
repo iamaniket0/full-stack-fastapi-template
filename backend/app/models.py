@@ -87,6 +87,7 @@ class ItemUpdate(SQLModel):
 class Item(ItemBase, table=True):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     created_at: datetime | None = Field(default_factory=get_datetime_utc)
+    archived: bool = Field(default=False, nullable=False)
     owner_id: uuid.UUID = Field(
         foreign_key="user.id", nullable=False, ondelete="CASCADE"
     )
@@ -98,6 +99,7 @@ class ItemPublic(ItemBase):
     id: uuid.UUID
     owner_id: uuid.UUID
     created_at: datetime | None = None
+    archived: bool = False
 
 
 class ItemsPublic(SQLModel):

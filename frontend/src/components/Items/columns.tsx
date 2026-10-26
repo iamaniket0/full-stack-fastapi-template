@@ -3,6 +3,7 @@ import { Check, Copy } from "lucide-react"
 
 import type { ItemPublic } from "@/client"
 import type { DataTableFeatures } from "@/components/Common/DataTable"
+import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { useCopyToClipboard } from "@/hooks/useCopyToClipboard"
 import { cn } from "@/lib/utils"
@@ -42,7 +43,10 @@ export const columns: ColumnDef<DataTableFeatures, ItemPublic>[] = [
     accessorKey: "title",
     header: "Title",
     cell: ({ row }) => (
-      <span className="font-medium">{row.original.title}</span>
+      <div className="flex items-center gap-2">
+        <span className="font-medium">{row.original.title}</span>
+        {row.original.archived && <Badge variant="secondary">Archived</Badge>}
+      </div>
     ),
   },
   {
