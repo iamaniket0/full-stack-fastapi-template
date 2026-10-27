@@ -128,6 +128,11 @@ class HealthDetails(SQLModel):
     time: str
 
 
+class UserStats(SQLModel):
+    total_users: int
+    new_users_last_7_days: int
+
+
 # JSON payload containing access token
 class Token(SQLModel):
     access_token: str
