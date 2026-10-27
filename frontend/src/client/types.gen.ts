@@ -113,6 +113,16 @@ export type ItemsPublic = {
 };
 
 /**
+ * ItemsCount
+ */
+export type ItemsCount = {
+    /**
+     * Count
+     */
+    count: number;
+};
+
+/**
  * Message
  */
 export type Message = {
@@ -866,11 +876,9 @@ export type itemsReadItemsCountData = {
 
 export type itemsReadItemsCountResponses = {
     /**
-     * Response Items-Read Items Count
-     *
      * Successful Response
      */
-    200: number;
+    200: ItemsCount;
 };
 
 export type itemsReadItemsCountResponse = itemsReadItemsCountResponses[keyof itemsReadItemsCountResponses];

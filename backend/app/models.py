@@ -105,6 +105,10 @@ class ItemsPublic(SQLModel):
     count: int
 
 
+class ItemsCount(SQLModel):
+    count: int
+
+
 # Generic message
 class Message(SQLModel):
     message: str
