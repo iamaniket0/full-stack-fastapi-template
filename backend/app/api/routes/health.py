@@ -2,9 +2,17 @@ from datetime import UTC, datetime
 
 from fastapi import APIRouter
 
-from app.models import HealthDetails
+from app.models import HealthDetails, HealthStatus
 
 router = APIRouter(prefix="/health", tags=["utils"])
+
+
+@router.get("")
+def health() -> HealthStatus:
+    """
+    Liveness check returning {"status": "ok"}. Does not check the database or other dependencies.
+    """
+    return HealthStatus(status="ok")
 
 
 @router.get("/details")

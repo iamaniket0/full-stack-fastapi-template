@@ -119,6 +119,10 @@ class Ping(SQLModel):
     ok: bool
 
 
+class HealthStatus(SQLModel):
+    status: str
+
+
 class HealthDetails(SQLModel):
     status: str
     time: str
