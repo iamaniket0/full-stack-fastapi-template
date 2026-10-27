@@ -133,6 +133,10 @@ class UserStats(SQLModel):
     new_users_last_7_days: int
 
 
+class AppVersion(SQLModel):
+    version: str
+
+
 # JSON payload containing access token
 class Token(SQLModel):
     access_token: str
