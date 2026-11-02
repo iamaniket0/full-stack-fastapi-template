@@ -105,6 +105,15 @@ class ItemsPublic(SQLModel):
     count: int
 
 
+# Failed login attempts per email, used for brute-force lockout
+class LoginAttempt(SQLModel, table=True):
+    # Stored lowercased so the lockout matches emails case-insensitively
+    email: str = Field(primary_key=True, max_length=255)
+    failed_attempts: int = 0
+    first_failed_at: datetime = Field(default_factory=get_datetime_utc)
+    locked_until: datetime | None = None
+
+
 # Generic message
 class Message(SQLModel):
     message: str

@@ -101,6 +101,8 @@ docker compose watch
 
 The tracked `.env` file contains local development defaults, passwords, and other configuration. Its hostnames use `localhost` for processes running on your machine. Docker Compose overrides hostnames such as the database and SMTP server with their Compose service names.
 
+The `LOGIN_MAX_FAILED_ATTEMPTS`, `LOGIN_ATTEMPT_WINDOW_MINUTES` and `LOGIN_LOCKOUT_MINUTES` variables control login brute-force protection: after too many failed logins for one email, `POST /api/v1/login/access-token` returns `429` for that email until the lockout ends. A superuser can lift a lockout early with `POST /api/v1/login/unlock/{email}`.
+
 Do not store deployment secrets in `.env`. Configure them as described in the [FastAPI Cloud deployment guide](./deployment.md) or the [Docker Compose deployment guide](./deployment-docker-compose.md).
 
 ## Pre-commit Hooks and Code Linting

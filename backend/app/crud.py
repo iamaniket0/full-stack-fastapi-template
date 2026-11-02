@@ -1,10 +1,15 @@
+import logging
 import uuid
+from datetime import UTC, datetime, timedelta
 from typing import Any
 
 from sqlmodel import Session, select
 
+from app.core.config import settings
 from app.core.security import get_password_hash, verify_password
-from app.models import Item, ItemCreate, User, UserCreate, UserUpdate
+from app.models import Item, ItemCreate, LoginAttempt, User, UserCreate, UserUpdate
+
+logger = logging.getLogger(__name__)
 
 
 def create_user(*, session: Session, user_create: UserCreate) -> User:
@@ -66,3 +71,46 @@ def create_item(*, session: Session, item_in: ItemCreate, owner_id: uuid.UUID) -
     session.commit()
     session.refresh(db_item)
     return db_item
+
+
+def get_login_locked_until(*, session: Session, email: str) -> datetime | None:
+    """Return when the email's lockout ends, or None if it is not locked out."""
+    attempt = session.get(LoginAttempt, email.lower())
+    if attempt and attempt.locked_until and attempt.locked_until > datetime.now(UTC):
+        return attempt.locked_until
+    return None
+
+
+def record_failed_login(*, session: Session, email: str) -> None:
+    """Count a failed login and lock the email out once the limit is reached."""
+    email = email.lower()
+    now = datetime.now(UTC)
+    attempt = session.get(LoginAttempt, email, with_for_update=True)
+    if attempt is None:
+        attempt = LoginAttempt(email=email, failed_attempts=0, first_failed_at=now)
+    window = timedelta(minutes=settings.LOGIN_ATTEMPT_WINDOW_MINUTES)
+    lockout_expired = attempt.locked_until is not None and attempt.locked_until <= now
+    if lockout_expired or attempt.first_failed_at + window < now:
+        attempt.failed_attempts = 0
+        attempt.first_failed_at = now
+        attempt.locked_until = None
+    attempt.failed_attempts += 1
+    if attempt.failed_attempts >= settings.LOGIN_MAX_FAILED_ATTEMPTS:
+        attempt.locked_until = now + timedelta(minutes=settings.LOGIN_LOCKOUT_MINUTES)
+        logger.warning(
+            "Login locked out for email %s at %s after %d failed attempts, until %s",
+            email,
+            now.isoformat(),
+            attempt.failed_attempts,
+            attempt.locked_until.isoformat(),
+        )
+    session.add(attempt)
+    session.commit()
+
+
+def clear_failed_logins(*, session: Session, email: str) -> None:
+    """Forget an email's failed attempts and lockout."""
+    attempt = session.get(LoginAttempt, email.lower())
+    if attempt:
+        session.delete(attempt)
+        session.commit()

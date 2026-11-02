@@ -1,4 +1,5 @@
-from datetime import timedelta
+import math
+from datetime import UTC, datetime, timedelta
 from typing import Annotated, Any
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -20,19 +21,38 @@ from app.utils import (
 router = APIRouter(tags=["login"])
 
 
-@router.post("/login/access-token")
+@router.post(
+    "/login/access-token",
+    responses={429: {"description": "Too many failed login attempts"}},
+)
 def login_access_token(
     session: SessionDep, form_data: Annotated[OAuth2PasswordRequestForm, Depends()]
 ) -> Token:
     """
-    OAuth2 compatible token login, get an access token for future requests
+    OAuth2 compatible token login, get an access token for future requests.
+
+    After `LOGIN_MAX_FAILED_ATTEMPTS` failed logins for one email within
+    `LOGIN_ATTEMPT_WINDOW_MINUTES`, further attempts for that email return 429
+    for `LOGIN_LOCKOUT_MINUTES`, even with the correct password.
     """
+    locked_until = crud.get_login_locked_until(
+        session=session, email=form_data.username
+    )
+    if locked_until:
+        retry_after = (locked_until - datetime.now(UTC)).total_seconds()
+        raise HTTPException(
+            status_code=429,
+            detail="Too many failed attempts, try again later",
+            headers={"Retry-After": str(max(1, math.ceil(retry_after)))},
+        )
     user = crud.authenticate(
         session=session, email=form_data.username, password=form_data.password
     )
     if not user:
+        crud.record_failed_login(session=session, email=form_data.username)
         raise HTTPException(status_code=400, detail="Incorrect email or password")
-    elif not user.is_active:
+    crud.clear_failed_logins(session=session, email=form_data.username)
+    if not user.is_active:
         raise HTTPException(status_code=400, detail="Inactive user")
     access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
     return Token(
@@ -40,6 +60,19 @@ def login_access_token(
             user.id, expires_delta=access_token_expires
         )
     )
+
+
+@router.post(
+    "/login/unlock/{email}",
+    dependencies=[Depends(get_current_active_superuser)],
+)
+def unlock_login(email: str, session: SessionDep) -> Message:
+    """
+    Clear the failed login attempts and lockout for an email (superuser only).
+    Succeeds even if the email is not locked out.
+    """
+    crud.clear_failed_logins(session=session, email=email)
+    return Message(message="Login unlocked for this email")
 
 
 @router.post("/login/test-token", response_model=UserPublic)
