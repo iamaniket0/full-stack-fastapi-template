@@ -1,12 +1,14 @@
+import uuid
 from datetime import UTC, datetime, timedelta
 from typing import Any
 
+import jwt
 import pytest
 from fastapi.testclient import TestClient
 from sqlmodel import Session, func, select
 
 from app.core.config import settings
-from app.core.security import create_access_token
+from app.core.security import ALGORITHM, create_access_token
 from app.models import User
 from tests.utils.user import create_random_user
 
@@ -108,21 +110,73 @@ def test_stats_without_auth_token(client: TestClient) -> None:
     assert_no_user_counts(r.json())
 
 
-@pytest.mark.parametrize(
-    "token",
-    [
-        "not-a-valid-token",
-        "abc.def.ghi",
-        create_access_token("someone", expires_delta=timedelta(minutes=-5)),
-    ],
-    ids=["invalid", "malformed", "expired"],
-)
+BAD_TOKENS = [
+    "not-a-valid-token",
+    "abc.def.ghi",
+    create_access_token("someone", expires_delta=timedelta(minutes=-5)),
+]
+BAD_TOKEN_IDS = ["invalid", "malformed", "expired"]
+
+
+@pytest.mark.parametrize("token", BAD_TOKENS, ids=BAD_TOKEN_IDS)
 def test_stats_with_bad_bearer_token(client: TestClient, token: str) -> None:
-    headers = {"Authorization": f"Bearer {token}"}
-    r = client.get(STATS_URL, headers=headers)
-    other = client.get(f"{settings.API_V1_STR}/users/me", headers=headers)
-    assert other.status_code == 403
-    assert r.status_code == other.status_code
+    r = client.get(STATS_URL, headers={"Authorization": f"Bearer {token}"})
+    assert r.status_code == 401
+    assert_no_user_counts(r.json())
+
+
+def test_stats_with_expired_token_of_existing_user(
+    client: TestClient, db: Session
+) -> None:
+    user = create_random_user(db)
+    token = create_access_token(str(user.id), expires_delta=timedelta(minutes=-5))
+    r = client.get(STATS_URL, headers={"Authorization": f"Bearer {token}"})
+    assert r.status_code == 401
+    assert_no_user_counts(r.json())
+
+
+def test_stats_with_token_signed_by_another_key(
+    client: TestClient, db: Session
+) -> None:
+    user = create_random_user(db)
+    token = jwt.encode(
+        {"sub": str(user.id), "exp": datetime.now(UTC) + timedelta(minutes=5)},
+        "x" * 32 + settings.SECRET_KEY,
+        algorithm=ALGORITHM,
+    )
+    r = client.get(STATS_URL, headers={"Authorization": f"Bearer {token}"})
+    assert r.status_code == 401
+    assert_no_user_counts(r.json())
+
+
+@pytest.mark.parametrize("token", BAD_TOKENS, ids=BAD_TOKEN_IDS)
+def test_users_me_still_returns_403_for_bad_token(
+    client: TestClient, token: str
+) -> None:
+    r = client.get(
+        f"{settings.API_V1_STR}/users/me",
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    assert r.status_code == 403
+
+
+def test_stats_token_of_deleted_user_keeps_404(client: TestClient) -> None:
+    token = create_access_token(str(uuid.uuid4()), expires_delta=timedelta(minutes=5))
+    r = client.get(STATS_URL, headers={"Authorization": f"Bearer {token}"})
+    assert r.status_code == 404
+    assert_no_user_counts(r.json())
+
+
+def test_stats_token_of_inactive_user_keeps_400(
+    client: TestClient, db: Session
+) -> None:
+    user = create_random_user(db)
+    user.is_active = False
+    db.add(user)
+    db.commit()
+    token = create_access_token(str(user.id), expires_delta=timedelta(minutes=5))
+    r = client.get(STATS_URL, headers={"Authorization": f"Bearer {token}"})
+    assert r.status_code == 400
     assert_no_user_counts(r.json())
 
 
