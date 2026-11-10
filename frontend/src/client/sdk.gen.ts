@@ -347,7 +347,9 @@ export class ItemsService {
     /**
      * Export Items
      *
-     * Export the current user's own items as CSV (id, title, description).
+     * Export the current user's own items as CSV (id, title, description, created_at).
+     *
+     * created_at is an ISO 8601 timestamp in UTC.
      */
     public static exportItems<ThrowOnError extends boolean = true>(options?: Options<itemsExportItemsData, ThrowOnError>) {
         return (options?.client ?? client).get<itemsExportItemsResponses, unknown, ThrowOnError>({
