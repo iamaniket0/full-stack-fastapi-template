@@ -1,6 +1,7 @@
 import csv
 import io
 import uuid
+from datetime import UTC
 from typing import Any
 
 from fastapi import APIRouter, HTTPException, Response
@@ -71,7 +72,9 @@ def read_items_count(session: SessionDep, current_user: CurrentUser) -> Any:
 )
 def export_items(session: SessionDep, current_user: CurrentUser) -> Response:
     """
-    Export the current user's own items as CSV (id, title, description).
+    Export the current user's own items as CSV (id, title, description, created_at).
+
+    created_at is an ISO 8601 timestamp in UTC.
     """
     statement = (
         select(Item)
@@ -82,9 +85,12 @@ def export_items(session: SessionDep, current_user: CurrentUser) -> Response:
 
     buffer = io.StringIO()
     writer = csv.writer(buffer)
-    writer.writerow(["id", "title", "description"])
+    writer.writerow(["id", "title", "description", "created_at"])
     for item in items:
-        writer.writerow([item.id, item.title, item.description or ""])
+        created_at = (
+            item.created_at.astimezone(UTC).isoformat() if item.created_at else ""
+        )
+        writer.writerow([item.id, item.title, item.description or "", created_at])
 
     return Response(
         content=buffer.getvalue(),
